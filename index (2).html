@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Ödev Kontrol Sistemi</title>
+  <style>
+    body{margin:0;font-family:Segoe UI,Tahoma,sans-serif;background:linear-gradient(135deg,#74ebd5 0%,#9face6 100%);}
+    .container{width:100%;max-width:960px;margin:30px auto;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.2);overflow:hidden;}
+    .tabs{display:flex;background:#003366;}
+    .tabs button{flex:1;padding:12px;border:none;background:transparent;color:#fff;font-weight:bold;cursor:pointer;}
+    .tabs button.active{background:#0055aa;}
+    .form,.panel{padding:20px;display:none;}
+    .form.active,.panel.active{display:block;}
+    .form input,.form select{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:5px;}
+    .form button{width:100%;padding:12px;background:#003366;color:#fff;border:none;border-radius:5px;font-weight:bold;cursor:pointer;}
+    .form button:hover{background:#0055aa;}
+    .header{display:flex;justify-content:space-between;margin-bottom:15px;}
+    .profile{font-weight:bold;color:#003366;}
+    .logout{background:#d33;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;}
+    .task{background:#eef;padding:10px;margin:8px 0;border-radius:5px;}
+    .task button{margin:5px;padding:5px 10px;border:none;border-radius:5px;cursor:pointer;}
+    .done{background:#28a745;color:#fff;}
+    .notdone{background:#dc3545;color:#fff;}
+    .dashboard{display:flex;min-height:500px;}
+    .sidebar{width:220px;background:#003366;color:#fff;display:flex;flex-direction:column;padding:15px;border-radius:8px 0 0 8px;}
+    .menu button{background:none;border:none;color:#fff;text-align:left;padding:10px;margin:5px 0;cursor:pointer;border-radius:5px;}
+    .menu button:hover{background:#0055aa;}
+    .content{flex:1;background:#f9f9f9;padding:20px;border-radius:0 8px 8px 0;}
+    .content-section.hidden{display:none;}
+    .game-card{background:#fff;border:1px solid #ccc;border-radius:5px;margin:10px 0;padding:10px;text-align:center;}
+    .game-card img{max-width:100%;height:120px;object-fit:cover;border-radius:5px;}
+  </style>
+</head>
+<body>
+  <!-- Giriş/Kayıt -->
+  <div class="container" id="authContainer">
+    <div class="tabs">
+      <button id="tabLogin" class="active">Giriş</button>
+      <button id="tabRegister">Kayıt Ol</button>
+    </div>
+    <form id="loginForm" class="form active">
+      <input type="text" id="loginUser" placeholder="Kullanıcı Adı" required />
+      <input type="password" id="loginPass" placeholder="Şifre" required />
+      <button type="submit">Giriş Yap</button>
+    </form>
+    <form id="registerForm" class="form">
+      <select id="role" required>
+        <option value="">Rol Seçin</option>
+        <option value="student">Öğrenci</option>
+        <option value="teacher">Öğretmen</option>
+      </select>
+      <input type="text" id="username" placeholder="Kullanıcı Adı" required />
+      <input type="password" id="password" placeholder="Şifre" required />
+      <input type="text" id="teacherCodeInput" placeholder="Öğretmen Kodu (öğrenciler için)" style="display:none;" />
+      <button type="submit">Kayıt Ol</button>
+    </form>
+  </div>
+
+  <!-- Öğrenci Paneli -->
+  <div class="container panel" id="studentPanel">
+    <div class="header">
+      <div class="profile" id="studentProfile">👨‍🎓 Öğrenci</div>
+      <button class="logout" onclick="logout()">Çıkış</button>
+    </div>
+    <div class="dashboard">
+      <aside class="sidebar">
+        <div class="profile" id="studentSidebarProfile">👨‍🎓</div>
+        <nav class="menu">
+          <button onclick="showSectionStudent('tasksSectionS')">📋 Ödevler</button>
+          <button onclick="showSectionStudent('gamesSectionS')">🎮 Oyunlar</button>
+          <button onclick="showSectionStudent('profileSectionS')">⚙️ Profil</button>
+        </nav>
+      </aside>
+      <main class="content">
+        <section id="tasksSectionS" class="content-section">
+          <h3>Öğretmenden Gelen Ödevler</h3>
+          <div id="studentTasks"></div>
+        </section>
+        <section id="gamesSectionS" class="content-section hidden">
+          <h3>🎮 Oyunlar</h3>
+          <div id="studentGames"></div>
+        </section>
+        <section id="profileSectionS" class="content-section hidden">
+          <h3>⚙️ Profil Düzenle</h3>
+          <div id="studentProfileView"></div>
+          <form id="studentProfileForm">
+            <input type="text" id="newStudentName" placeholder="Yeni İsim" />
+            <input type="file" id="newStudentImg" accept="image/*" />
+            <button type="submit">Kaydet</button>
+            <button type="button" onclick="deleteStudentImg()">Profil Resmini Sil</button>
+          </form>
+          <h4>🔑 Şifre Değiştir</h4>
+          <form id="studentPassForm">
+            <input type="password" id="oldStudentPass" placeholder="Mevcut Şifre" required />
+            <input type="password" id="newStudentPass" placeholder="Yeni Şifre" required />
+            <input type="password" id="confirmStudentPass" placeholder="Yeni Şifre (Tekrar)" required />
+            <button type="submit">Şifreyi Güncelle</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Öğretmen Paneli -->
+  <div class="container panel" id="teacherPanel">
+    <div class="dashboard">
+      <aside class="sidebar">
+        <div class="profile" id="teacherSidebarProfile">👩‍🏫</div>
+        <button class="logout" onclick="logout()">Çıkış</button>
+        <nav class="menu">
+          <button onclick="showSection('tasksSection')">📋 Ödevler</button>
+          <button onclick="showSection('gamesSection')">🎮 Oyunlar</button>
+          <button onclick="showSection('studentsSection')">👨‍🎓 Öğrenciler</button>
+          <button onclick="showSection('profileSection')">⚙️ Profil</button>
+        </nav>
+      </aside>
+      <main class="content">
+        <section id="tasksSection" class="content-section">
+          <h3>📋 Yayınlanan Ödevler</h3>
+          <form id="taskForm">
+            <input type="text" id="taskTitle" placeholder="Ödev Başlığı" required />
+            <input type="date" id="taskDeadline" required />
+            <button type="submit">Ödev Ekle</button>
+          </form>
+          <div id="teacherTasks"></div>
+        </section>
+        <section id="gamesSection" class="content-section hidden">
+          <h3>🎮 Oyun Ekle</h3>
+          <form id="gameForm">
+            <input type="text" id="gameTitle" placeholder="Oyun Başlığı" required />
+            <input type="url" id="gameLink" placeholder="Oyun Linki" required />
+            <input type="file" id="gameImage" accept="image/*" required />
+            <button type="submit">Oyun Yayınla</button>
+          </form>
+          <div id="teacherGames"></div>
+        </section>
+        <section id="studentsSection" class="content-section hidden">
+          <h3>👨‍🎓 Öğrenci Listesi</h3>
+          <p><b>Sınıf Kodu:</b> <span id="teacherCodeDisplay"></span></p>
+          <ul id="studentList"></ul>
+        </section>
+        <section id="profileSection" class="content-section hidden">
+          <h3>⚙️ Profil Düzenle</h3>
+          <div id="profileView"></div>
+          <form id="profileForm">
+            <input type="text" id="newTeacherName" placeholder="Yeni İsim" />
+            <input type="file" id="newTeacherImg" accept="image/*" />
+            <button type="submit">Kaydet</button>
+            <button type="button" onclick="deleteProfileImg()">Profil Resmini Sil</button>
+          </form>
+          <h4>🔑 Şifre Değiştir</h4>
+          <form id="teacherPassForm">
+            <input type="password" id="oldTeacherPass" placeholder="Mevcut Şifre" required />
+            <input type="password" id="newTeacherPass" placeholder="Yeni Şifre" required />
+            <input type="password" id="confirmTeacherPass" placeholder="Yeni Şifre (Tekrar)" required />
+            <button type="submit">Şifreyi Güncelle</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // === LocalStorage helpers ===
+    const getUsers=()=>JSON.parse(localStorage.getItem("users")||"[]");
+    const saveUsers=u=>localStorage.setItem("users",JSON.stringify(u));
+    const getTasks=()=>JSON.parse(localStorage.getItem("tasks")||"[]");
+    const saveTasks=t=>localStorage.setItem("tasks",JSON.stringify(t));
+    const getGames=()=>JSON.parse(localStorage.getItem("games")||"[]");
+    const saveGames=g=>localStorage.setItem("games",JSON.stringify(g));
+
+    let currentUser=null;
+
+    // === LOGIN & REGISTER ===
+    document.getElementById("tabLogin").onclick=()=>switchTab("login");
+    document.getElementById("tabRegister").onclick=()=>switchTab("register");
+    function switchTab(tab){
+      document.getElementById("tabLogin").classList.toggle("active",tab==="login");
+      document.getElementById("tabRegister").classList.toggle("active",tab==="register");
+      document.getElementById("loginForm").classList.toggle("active",tab==="login");
+      document.getElementById("registerForm").classList.toggle("active",tab==="register");
+    }
+    document.getElementById("role").onchange=e=>{
+      document.getElementById("teacherCodeInput").style.display=e.target.value==="student"?"block":"none";
+    };
+    function validatePassword(pw){
+      if(pw.length < 6) return false;
+      if(!/[a-zA-Z]/.test(pw)) return false;
+      if(!/[0-9]/.test(pw)) return false;
+      return true;
+    }
+    document.getElementById("registerForm").onsubmit=e=>{
+      e.preventDefault();
+      const role=document.getElementById("role").value;
+      const username=document.getElementById("username").value;
+      const password=document.getElementById("password").value;
+      let users=getUsers();
+      if(users.find(u=>u.username===username)){alert("Bu kullanıcı adı zaten var!");return;}
+      if(!validatePassword(password)){alert("Şifre en az 6 karakter olmalı ve hem harf hem rakam içermeli!");return;}
+      if(role==="teacher"){
+        const code="T-"+Math.floor(10000+Math.random()*90000);
+        users.push({role,username,password,code});
+        alert("Öğretmen Kodunuz: "+code);
+      }else{
+        const code=document.getElementById("teacherCodeInput").value.trim();
+        const teacher=getUsers().find(u=>u.role==="teacher"&&u.code===code);
+        if(!teacher){alert("Geçersiz öğretmen kodu!");return;}
+        users.push({role,username,password,teacherCode:code,statuses:{}});
+      }
+      saveUsers(users);switchTab("login");
+    };
+    document.getElementById("loginForm").onsubmit=e=>{
+      e.preventDefault();
+      const u=document.getElementById("loginUser").value;
+      const p=document.getElementById("loginPass").value;
+      const user=getUsers().find(x=>x.username===u&&x.password===p);
+      if(!user){alert("Hatalı giriş!");return;}
+      currentUser=user;document.getElementById("authContainer").style.display="none";
+      if(user.role==="student"){document.getElementById("studentPanel").classList.add("active");renderStudent();}
+      else{document.getElementById("teacherPanel").classList.add("active");renderTeacher();}
+    };
+    function logout(){currentUser=null;document.getElementById("authContainer").style.display="block";document.getElementById("studentPanel").classList.remove("active");document.getElementById("teacherPanel").classList.remove("active");}
+    window.logout=logout;
+
+    // === TEACHER PANEL ===
+    function renderTeacher(){renderTeacherTasks();renderTeacherGames();renderStudents();renderProfile();}
+    document.getElementById("taskForm").onsubmit=e=>{
+      e.preventDefault();
+      let tasks=getTasks();
+      tasks.push({title:taskTitle.value,deadline:taskDeadline.value,teacher:currentUser.username});
+      saveTasks(tasks);renderTeacherTasks();renderStudentTasks();e.target.reset();
+    };
+    function renderTeacherTasks(){
+      const tasks=getTasks().filter(t=>t.teacher===currentUser.username);
+      teacherTasks.innerHTML="";
+      tasks.forEach((t,i)=>{
+        teacherTasks.innerHTML+=`<div class="task"><b>${t.title}</b> (Son: ${t.deadline})
+          <button onclick="deleteTask(${i})">Sil</button></div>`;
+      });
+    }
+    function deleteTask(i){let tasks=getTasks();tasks.splice(i,1);saveTasks(tasks);renderTeacherTasks();renderStudentTasks();}
+    window.deleteTask=deleteTask;
+    document.getElementById("gameForm").onsubmit=e=>{
+      e.preventDefault();
+      const file=gameImage.files[0];const reader=new FileReader();
+      reader.onload=()=>{let games=getGames();games.push({title:gameTitle.value,link:gameLink.value,img:reader.result,teacher:currentUser.username});saveGames(games);renderTeacherGames();renderStudentGames();};
+      reader.readAsDataURL(file);e.target.reset();
+    };
+    function renderTeacherGames(){
+      const games=getGames().filter(g=>g.teacher===currentUser.username);
+      teacherGames.innerHTML="";
+      games.forEach((g,i)=>{
+        teacherGames.innerHTML+=`<div class="game-card"><img src="${g.img}"><p>${g.title}</p>
+          <a href="${g.link}" target="_blank">Oyna</a>
+          <button onclick="deleteGame(${i})">Sil</button></div>`;
+      });
+    }
+    function deleteGame(i){let games=getGames();games.splice(i,1);saveGames(games);renderTeacherGames();renderStudentGames();}
+    window.deleteGame=deleteGame;
+    function renderStudents(){
+      const users=getUsers().filter(u=>u.role==="student"&&u.teacherCode===currentUser.code);
+      teacherCodeDisplay.textContent=currentUser.code;
+      studentList.innerHTML=users.map(s=>`<li>${s.username}</li>`).join("");
+    }
+    function renderProfile(){
+      const img=currentUser.img?`<img src="${currentUser.img}" width="100" style="border-radius:50%"><br/>`:"<p>Profil resmi yok</p>";
+      profileView.innerHTML=`${img}<p><b>Kullanıcı Adı:</b> ${currentUser.username}</p>`;
+      updateTeacherSidebar();
+    }
+    document.getElementById("profileForm").onsubmit=e=>{
+      e.preventDefault();
+      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
+      const newName=newTeacherName.value.trim();const file=newTeacherImg.files[0];
+      if(newName) u.username=newName;
+      if(file){const reader=new FileReader();reader.onload=()=>{u.img=reader.result;saveUsers(users);currentUser=u;renderProfile();alert("Profil güncellendi!");};reader.readAsDataURL(file);}
+      else{saveUsers(users);currentUser=u;renderProfile();alert("Profil güncellendi!");}
+      e.target.reset();
+    };
+    function deleteProfileImg(){let users=getUsers();let u=users.find(x=>x.username===currentUser.username);u.img=null;saveUsers(users);currentUser=u;renderProfile();}
+    window.deleteProfileImg=deleteProfileImg;
+    function updateTeacherSidebar(){teacherSidebarProfile.innerHTML=`${currentUser.img?`<img src="${currentUser.img}" width="30" style="border-radius:50%;vertical-align:middle;margin-right:5px;">`:"👩‍🏫"} ${currentUser.username}`;}
+    document.getElementById("teacherPassForm").onsubmit=e=>{
+      e.preventDefault();
+      let oldPass=oldTeacherPass.value,newPass=newTeacherPass.value,confirm=confirmTeacherPass.value;
+      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
+      if(u.password!==oldPass){alert("Mevcut şifre hatalı!");return;}
+      if(newPass!==confirm){alert("Yeni şifreler eşleşmiyor!");return;}
+      if(!validatePassword(newPass)){alert("Şifre en az 6 karakter olmalı ve hem harf hem rakam içermeli!");return;}
+      u.password=newPass;saveUsers(users);currentUser=u;alert("Şifre başarıyla güncellendi!");e.target.reset();
+    };
+    function showSection(id){document.querySelectorAll("#teacherPanel .content-section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");}
+
+    // === STUDENT PANEL ===
+    function renderStudent(){renderStudentTasks();renderStudentGames();renderStudentProfile();}
+    function renderStudentTasks(){
+      const tasks=getTasks().filter(t=>getUsers().find(u=>u.username===currentUser.username).teacherCode===t.teacherCode||true);
+      studentTasks.innerHTML="";
+      tasks.forEach(t=>{
+        const status=currentUser.statuses[t.title]||"notdone";
+        studentTasks.innerHTML+=`<div class="task"><b>${t.title}</b> (Son: ${t.deadline})
+          <button class="done" onclick="markTask('${t.title}','done')">Tamamladım</button>
+          <button class="notdone" onclick="markTask('${t.title}','notdone')">Tamamlamadım</button>
+          <span>Durum: ${status==="done"?"✅":"❌"}</span></div>`;
+      });
+    }
+    function markTask(title,status){
+      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
+      u.statuses[u.statuses?title:title]=status;u.statuses[title]=status;saveUsers(users);currentUser=u;renderStudentTasks();
+    }
+    window.markTask=markTask;
+    function renderStudentGames(){
+      studentGames.innerHTML="";
+      const games=getGames();games.forEach(g=>{
+        studentGames.innerHTML+=`<div class="game-card"><img src="${g.img}"><p>${g.title}</p>
+          <a href="${g.link}" target="_blank">Oyna</a></div>`;
+      });
+    }
+    function renderStudentProfile(){
+      const img=currentUser.img?`<img src="${currentUser.img}" width="100" style="border-radius:50%"><br/>`:"<p>Profil resmi yok</p>";
+      studentProfileView.innerHTML=`${img}<p><b>Kullanıcı Adı:</b> ${currentUser.username}</p>`;
+      updateStudentSidebar();
+    }
+    document.getElementById("studentProfileForm").onsubmit=e=>{
+      e.preventDefault();
+      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
+      const newName=newStudentName.value.trim();const file=newStudentImg.files[0];
+      if(newName) u.username=newName;
+      if(file){const reader=new FileReader();reader.onload=()=>{u.img=reader.result;saveUsers(users);currentUser=u;renderStudentProfile();alert("Profil güncellendi!");};reader.readAsDataURL(file);}
+      else{saveUsers(users);currentUser=u;renderStudentProfile();alert("Profil güncellendi!");}
+      e.target.reset();
+    };
+    function deleteStudentImg(){let users=getUsers();let u=users.find(x=>x.username===currentUser.username);u.img=null;saveUsers(users);currentUser=u;renderStudentProfile();}
+    window.deleteStudentImg=deleteStudentImg;
+    function updateStudentSidebar(){studentSidebarProfile.innerHTML=`${currentUser.img?`<img src="${currentUser.img}" width="30" style="border-radius:50%;vertical-align:middle;margin-right:5px;">`:"👨‍🎓"} ${currentUser.username}`;}
+    document.getElementById("studentPassForm").onsubmit=e=>{
+      e.preventDefault();
+      let oldPass=oldStudentPass.value,newPass=newStudentPass.value,confirm=confirmStudentPass.value;
+      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
+      if(u.password!==oldPass){alert("Mevcut şifre hatalı!");return;}
+      if(newPass!==confirm){alert("Yeni şifreler eşleşmiyor!");return;}
+      if(!validatePassword(newPass)){alert("Şifre en az 6 karakter olmalı ve hem harf hem rakam içermeli!");return;}
+      u.password=newPass;saveUsers(users);currentUser=u;alert("Şifre başarıyla güncellendi!");e.target.reset();
+    };
+    function showSectionStudent(id){document.querySelectorAll("#studentPanel .content-section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");}
+  </script>
+</body>
+</html>
