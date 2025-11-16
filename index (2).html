@@ -1,347 +1,604 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
+<!doctype html>
+<html lang="tr" class="h-full">
+ <head>
   <meta charset="UTF-8">
-  <title>Ödev Kontrol Sistemi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Çıkarma İşlemi Uygulaması</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body{margin:0;font-family:Segoe UI,Tahoma,sans-serif;background:linear-gradient(135deg,#74ebd5 0%,#9face6 100%);}
-    .container{width:100%;max-width:960px;margin:30px auto;background:#fff;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.2);overflow:hidden;}
-    .tabs{display:flex;background:#003366;}
-    .tabs button{flex:1;padding:12px;border:none;background:transparent;color:#fff;font-weight:bold;cursor:pointer;}
-    .tabs button.active{background:#0055aa;}
-    .form,.panel{padding:20px;display:none;}
-    .form.active,.panel.active{display:block;}
-    .form input,.form select{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:5px;}
-    .form button{width:100%;padding:12px;background:#003366;color:#fff;border:none;border-radius:5px;font-weight:bold;cursor:pointer;}
-    .form button:hover{background:#0055aa;}
-    .header{display:flex;justify-content:space-between;margin-bottom:15px;}
-    .profile{font-weight:bold;color:#003366;}
-    .logout{background:#d33;color:#fff;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;}
-    .task{background:#eef;padding:10px;margin:8px 0;border-radius:5px;}
-    .task button{margin:5px;padding:5px 10px;border:none;border-radius:5px;cursor:pointer;}
-    .done{background:#28a745;color:#fff;}
-    .notdone{background:#dc3545;color:#fff;}
-    .dashboard{display:flex;min-height:500px;}
-    .sidebar{width:220px;background:#003366;color:#fff;display:flex;flex-direction:column;padding:15px;border-radius:8px 0 0 8px;}
-    .menu button{background:none;border:none;color:#fff;text-align:left;padding:10px;margin:5px 0;cursor:pointer;border-radius:5px;}
-    .menu button:hover{background:#0055aa;}
-    .content{flex:1;background:#f9f9f9;padding:20px;border-radius:0 8px 8px 0;}
-    .content-section.hidden{display:none;}
-    .game-card{background:#fff;border:1px solid #ccc;border-radius:5px;margin:10px 0;padding:10px;text-align:center;}
-    .game-card img{max-width:100%;height:120px;object-fit:cover;border-radius:5px;}
-  </style>
-</head>
-<body>
-  <!-- Giriş/Kayıt -->
-  <div class="container" id="authContainer">
-    <div class="tabs">
-      <button id="tabLogin" class="active">Giriş</button>
-      <button id="tabRegister">Kayıt Ol</button>
-    </div>
-    <form id="loginForm" class="form active">
-      <input type="text" id="loginUser" placeholder="Kullanıcı Adı" required />
-      <input type="password" id="loginPass" placeholder="Şifre" required />
-      <button type="submit">Giriş Yap</button>
-    </form>
-    <form id="registerForm" class="form">
-      <select id="role" required>
-        <option value="">Rol Seçin</option>
-        <option value="student">Öğrenci</option>
-        <option value="teacher">Öğretmen</option>
-      </select>
-      <input type="text" id="username" placeholder="Kullanıcı Adı" required />
-      <input type="password" id="password" placeholder="Şifre" required />
-      <input type="text" id="teacherCodeInput" placeholder="Öğretmen Kodu (öğrenciler için)" style="display:none;" />
-      <button type="submit">Kayıt Ol</button>
-    </form>
-  </div>
+        body {
+            box-sizing: border-box;
+        }
+        
+        .math-input {
+            width: 80px;
+            height: 60px;
+            font-size: 24px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            -moz-appearance: textfield;
+        }
+        
+        .math-input::-webkit-outer-spin-button,
+        .math-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        .math-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .math-input.correct {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+        }
+        
+        .math-input.incorrect {
+            border-color: #ef4444;
+            background-color: #fef2f2;
+        }
+        
+        .vertical-layout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .horizontal-layout {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .minus-sign {
+            font-size: 32px;
+            font-weight: bold;
+            color: #374151;
+        }
+        
+        .plus-sign {
+            font-size: 32px;
+            font-weight: bold;
+            color: #374151;
+        }
+        
+        .equals-sign {
+            font-size: 32px;
+            font-weight: bold;
+            color: #374151;
+        }
+        
+        .line-under {
+            width: 100%;
+            height: 3px;
+            background-color: #374151;
+            margin: 4px 0;
+        }
 
-  <!-- Öğrenci Paneli -->
-  <div class="container panel" id="studentPanel">
-    <div class="header">
-      <div class="profile" id="studentProfile">👨‍🎓 Öğrenci</div>
-      <button class="logout" onclick="logout()">Çıkış</button>
-    </div>
-    <div class="dashboard">
-      <aside class="sidebar">
-        <div class="profile" id="studentSidebarProfile">👨‍🎓</div>
-        <nav class="menu">
-          <button onclick="showSectionStudent('tasksSectionS')">📋 Ödevler</button>
-          <button onclick="showSectionStudent('gamesSectionS')">🎮 Oyunlar</button>
-          <button onclick="showSectionStudent('profileSectionS')">⚙️ Profil</button>
-        </nav>
-      </aside>
-      <main class="content">
-        <section id="tasksSectionS" class="content-section">
-          <h3>Öğretmenden Gelen Ödevler</h3>
-          <div id="studentTasks"></div>
-        </section>
-        <section id="gamesSectionS" class="content-section hidden">
-          <h3>🎮 Oyunlar</h3>
-          <div id="studentGames"></div>
-        </section>
-        <section id="profileSectionS" class="content-section hidden">
-          <h3>⚙️ Profil Düzenle</h3>
-          <div id="studentProfileView"></div>
-          <form id="studentProfileForm">
-            <input type="text" id="newStudentName" placeholder="Yeni İsim" />
-            <input type="file" id="newStudentImg" accept="image/*" />
-            <button type="submit">Kaydet</button>
-            <button type="button" onclick="deleteStudentImg()">Profil Resmini Sil</button>
-          </form>
-          <h4>🔑 Şifre Değiştir</h4>
-          <form id="studentPassForm">
-            <input type="password" id="oldStudentPass" placeholder="Mevcut Şifre" required />
-            <input type="password" id="newStudentPass" placeholder="Yeni Şifre" required />
-            <input type="password" id="confirmStudentPass" placeholder="Yeni Şifre (Tekrar)" required />
-            <button type="submit">Şifreyi Güncelle</button>
-          </form>
-        </section>
-      </main>
-    </div>
-  </div>
+        .problem-grid {
+            width: 100%;
+        }
 
-  <!-- Öğretmen Paneli -->
-  <div class="container panel" id="teacherPanel">
-    <div class="dashboard">
-      <aside class="sidebar">
-        <div class="profile" id="teacherSidebarProfile">👩‍🏫</div>
-        <button class="logout" onclick="logout()">Çıkış</button>
-        <nav class="menu">
-          <button onclick="showSection('tasksSection')">📋 Ödevler</button>
-          <button onclick="showSection('gamesSection')">🎮 Oyunlar</button>
-          <button onclick="showSection('studentsSection')">👨‍🎓 Öğrenciler</button>
-          <button onclick="showSection('profileSection')">⚙️ Profil</button>
-        </nav>
-      </aside>
-      <main class="content">
-        <section id="tasksSection" class="content-section">
-          <h3>📋 Yayınlanan Ödevler</h3>
-          <form id="taskForm">
-            <input type="text" id="taskTitle" placeholder="Ödev Başlığı" required />
-            <input type="date" id="taskDeadline" required />
-            <button type="submit">Ödev Ekle</button>
-          </form>
-          <div id="teacherTasks"></div>
-        </section>
-        <section id="gamesSection" class="content-section hidden">
-          <h3>🎮 Oyun Ekle</h3>
-          <form id="gameForm">
-            <input type="text" id="gameTitle" placeholder="Oyun Başlığı" required />
-            <input type="url" id="gameLink" placeholder="Oyun Linki" required />
-            <input type="file" id="gameImage" accept="image/*" required />
-            <button type="submit">Oyun Yayınla</button>
-          </form>
-          <div id="teacherGames"></div>
-        </section>
-        <section id="studentsSection" class="content-section hidden">
-          <h3>👨‍🎓 Öğrenci Listesi</h3>
-          <p><b>Sınıf Kodu:</b> <span id="teacherCodeDisplay"></span></p>
-          <ul id="studentList"></ul>
-        </section>
-        <section id="profileSection" class="content-section hidden">
-          <h3>⚙️ Profil Düzenle</h3>
-          <div id="profileView"></div>
-          <form id="profileForm">
-            <input type="text" id="newTeacherName" placeholder="Yeni İsim" />
-            <input type="file" id="newTeacherImg" accept="image/*" />
-            <button type="submit">Kaydet</button>
-            <button type="button" onclick="deleteProfileImg()">Profil Resmini Sil</button>
-          </form>
-          <h4>🔑 Şifre Değiştir</h4>
-          <form id="teacherPassForm">
-            <input type="password" id="oldTeacherPass" placeholder="Mevcut Şifre" required />
-            <input type="password" id="newTeacherPass" placeholder="Yeni Şifre" required />
-            <input type="password" id="confirmTeacherPass" placeholder="Yeni Şifre (Tekrar)" required />
-            <button type="submit">Şifreyi Güncelle</button>
-          </form>
-        </section>
-      </main>
-    </div>
-  </div>
+        .problem-card-wrapper {
+            padding: 0.35rem;
+        }
 
+        .problem-card {
+            width: 100%;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-gradient-to-br from-blue-50 to-indigo-100">
+  <main class="container mx-auto px-4 py-8 h-full">
+   <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+    <header class="text-center mb-8">
+     <h1 id="app-title" class="text-4xl font-bold text-gray-800 mb-4">Matematik İşlemleri Uygulaması</h1>
+     <p class="text-lg text-gray-600">1, 2 veya 3 basamaklı sayılarla toplama ve çıkarma işlemi pratiği yapın</p>
+    </header><!-- Ayarlar Paneli -->
+    <div class="bg-gray-50 rounded-xl p-6 mb-8">
+     <h2 class="text-xl font-semibold text-gray-700 mb-4">⚙️ Ayarlar</h2>
+     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6"><!-- İşlem Türü -->
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">İşlem Türü</label> <select id="problem-type" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"> <option value="subtraction-result">Çıkarma - Sonucu Bul</option> <option value="subtraction-minuend">Çıkarma - Eksileni Bul</option> <option value="subtraction-subtrahend">Çıkarma - Çıkanı Bul</option> <option value="addition-result">Toplama - Sonucu Bul</option> <option value="addition-first-addend">Toplama - 1. Toplanı Bul</option> <option value="addition-second-addend">Toplama - 2. Toplanı Bul</option> </select>
+      </div><!-- İşlem Sayısı -->
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Soru Sayısı</label> <select id="problem-count" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"> <option value="1" selected>1 Soru</option> <option value="5">5 Soru</option> <option value="10">10 Soru</option> <option value="15">15 Soru</option> <option value="20">20 Soru</option> <option value="25">25 Soru</option> <option value="30">30 Soru</option> <option value="40">40 Soru</option> <option value="50">50 Soru</option> </select>
+      </div><!-- Basamak Sayısı -->
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Basamak Sayısı</label> <select id="digit-count" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"> <option value="1">1 Basamak (1-9)</option> <option value="2">2 Basamak (10-99)</option> <option value="3" selected>3 Basamak (100-999)</option> </select>
+      </div><!-- Düzen -->
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">İşlem Düzeni</label> <select id="layout-type" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"> <option value="vertical">Alt Alta</option> <option value="horizontal">Yan Yana</option> </select>
+      </div><!-- Font Boyutu -->
+      <div><label class="block text-sm font-medium text-gray-700 mb-2">Yazı Boyutu</label> <select id="font-size" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"> <option value="18">Küçük</option> <option value="24" selected>Orta</option> <option value="30">Büyük</option> <option value="36">Çok Büyük</option> </select>
+      </div>
+     </div>
+    </div><!-- İşlem Alanı -->
+    <div class="bg-blue-50 rounded-xl p-8 mb-6">
+     <div id="problem-container" class="vertical-layout problem-grid"><!-- İşlem buraya dinamik olarak yüklenecek -->
+     </div>
+    </div><!-- Kontrol Butonları -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center"><button id="check-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg"> Kontrol Et </button> <button id="new-problem-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200 shadow-lg"> Yeni Soru </button>
+    </div><!-- Sonuç Mesajı -->
+    <div id="result-message" class="mt-6 text-center text-lg font-semibold hidden"></div>
+   </div>
+  </main>
   <script>
-    // === LocalStorage helpers ===
-    const getUsers=()=>JSON.parse(localStorage.getItem("users")||"[]");
-    const saveUsers=u=>localStorage.setItem("users",JSON.stringify(u));
-    const getTasks=()=>JSON.parse(localStorage.getItem("tasks")||"[]");
-    const saveTasks=t=>localStorage.setItem("tasks",JSON.stringify(t));
-    const getGames=()=>JSON.parse(localStorage.getItem("games")||"[]");
-    const saveGames=g=>localStorage.setItem("games",JSON.stringify(g));
+        // Konfigürasyon
+        const defaultConfig = {
+            app_title: "Matematik İşlemleri Uygulaması",
+            check_button_text: "Kontrol Et",
+            new_problem_text: "Yeni Soru",
+            primary_color: "#3b82f6",
+            secondary_color: "#10b981",
+            background_color: "#f8fafc",
+            text_color: "#1f2937",
+            accent_color: "#ef4444",
+            font_family: "system-ui",
+            font_size: 16
+        };
 
-    let currentUser=null;
+        let currentProblems = [];
+        let currentLayout = 'vertical';
+        let currentProblemType = 'subtraction-result';
+        let currentFontSize = 24;
+        let currentDigitCount = 3;
+        let currentProblemCount = 1;
 
-    // === LOGIN & REGISTER ===
-    document.getElementById("tabLogin").onclick=()=>switchTab("login");
-    document.getElementById("tabRegister").onclick=()=>switchTab("register");
-    function switchTab(tab){
-      document.getElementById("tabLogin").classList.toggle("active",tab==="login");
-      document.getElementById("tabRegister").classList.toggle("active",tab==="register");
-      document.getElementById("loginForm").classList.toggle("active",tab==="login");
-      document.getElementById("registerForm").classList.toggle("active",tab==="register");
-    }
-    document.getElementById("role").onchange=e=>{
-      document.getElementById("teacherCodeInput").style.display=e.target.value==="student"?"block":"none";
-    };
-    function validatePassword(pw){
-      if(pw.length < 6) return false;
-      if(!/[a-zA-Z]/.test(pw)) return false;
-      if(!/[0-9]/.test(pw)) return false;
-      return true;
-    }
-    document.getElementById("registerForm").onsubmit=e=>{
-      e.preventDefault();
-      const role=document.getElementById("role").value;
-      const username=document.getElementById("username").value;
-      const password=document.getElementById("password").value;
-      let users=getUsers();
-      if(users.find(u=>u.username===username)){alert("Bu kullanıcı adı zaten var!");return;}
-      if(!validatePassword(password)){alert("Şifre en az 6 karakter olmalı ve hem harf hem rakam içermeli!");return;}
-      if(role==="teacher"){
-        const code="T-"+Math.floor(10000+Math.random()*90000);
-        users.push({role,username,password,code});
-        alert("Öğretmen Kodunuz: "+code);
-      }else{
-        const code=document.getElementById("teacherCodeInput").value.trim();
-        const teacher=getUsers().find(u=>u.role==="teacher"&&u.code===code);
-        if(!teacher){alert("Geçersiz öğretmen kodu!");return;}
-        users.push({role,username,password,teacherCode:code,statuses:{}});
-      }
-      saveUsers(users);switchTab("login");
-    };
-    document.getElementById("loginForm").onsubmit=e=>{
-      e.preventDefault();
-      const u=document.getElementById("loginUser").value;
-      const p=document.getElementById("loginPass").value;
-      const user=getUsers().find(x=>x.username===u&&x.password===p);
-      if(!user){alert("Hatalı giriş!");return;}
-      currentUser=user;document.getElementById("authContainer").style.display="none";
-      if(user.role==="student"){document.getElementById("studentPanel").classList.add("active");renderStudent();}
-      else{document.getElementById("teacherPanel").classList.add("active");renderTeacher();}
-    };
-    function logout(){currentUser=null;document.getElementById("authContainer").style.display="block";document.getElementById("studentPanel").classList.remove("active");document.getElementById("teacherPanel").classList.remove("active");}
-    window.logout=logout;
+        // Element SDK başlatma
+        if (window.elementSdk) {
+            window.elementSdk.init({
+                defaultConfig,
+                onConfigChange: async (config) => {
+                    const customFont = config.font_family || defaultConfig.font_family;
+                    const baseSize = config.font_size || defaultConfig.font_size;
+                    const baseFontStack = 'system-ui, -apple-system, sans-serif';
 
-    // === TEACHER PANEL ===
-    function renderTeacher(){renderTeacherTasks();renderTeacherGames();renderStudents();renderProfile();}
-    document.getElementById("taskForm").onsubmit=e=>{
-      e.preventDefault();
-      let tasks=getTasks();
-      tasks.push({title:taskTitle.value,deadline:taskDeadline.value,teacher:currentUser.username});
-      saveTasks(tasks);renderTeacherTasks();renderStudentTasks();e.target.reset();
-    };
-    function renderTeacherTasks(){
-      const tasks=getTasks().filter(t=>t.teacher===currentUser.username);
-      teacherTasks.innerHTML="";
-      tasks.forEach((t,i)=>{
-        teacherTasks.innerHTML+=`<div class="task"><b>${t.title}</b> (Son: ${t.deadline})
-          <button onclick="deleteTask(${i})">Sil</button></div>`;
-      });
-    }
-    function deleteTask(i){let tasks=getTasks();tasks.splice(i,1);saveTasks(tasks);renderTeacherTasks();renderStudentTasks();}
-    window.deleteTask=deleteTask;
-    document.getElementById("gameForm").onsubmit=e=>{
-      e.preventDefault();
-      const file=gameImage.files[0];const reader=new FileReader();
-      reader.onload=()=>{let games=getGames();games.push({title:gameTitle.value,link:gameLink.value,img:reader.result,teacher:currentUser.username});saveGames(games);renderTeacherGames();renderStudentGames();};
-      reader.readAsDataURL(file);e.target.reset();
-    };
-    function renderTeacherGames(){
-      const games=getGames().filter(g=>g.teacher===currentUser.username);
-      teacherGames.innerHTML="";
-      games.forEach((g,i)=>{
-        teacherGames.innerHTML+=`<div class="game-card"><img src="${g.img}"><p>${g.title}</p>
-          <a href="${g.link}" target="_blank">Oyna</a>
-          <button onclick="deleteGame(${i})">Sil</button></div>`;
-      });
-    }
-    function deleteGame(i){let games=getGames();games.splice(i,1);saveGames(games);renderTeacherGames();renderStudentGames();}
-    window.deleteGame=deleteGame;
-    function renderStudents(){
-      const users=getUsers().filter(u=>u.role==="student"&&u.teacherCode===currentUser.code);
-      teacherCodeDisplay.textContent=currentUser.code;
-      studentList.innerHTML=users.map(s=>`<li>${s.username}</li>`).join("");
-    }
-    function renderProfile(){
-      const img=currentUser.img?`<img src="${currentUser.img}" width="100" style="border-radius:50%"><br/>`:"<p>Profil resmi yok</p>";
-      profileView.innerHTML=`${img}<p><b>Kullanıcı Adı:</b> ${currentUser.username}</p>`;
-      updateTeacherSidebar();
-    }
-    document.getElementById("profileForm").onsubmit=e=>{
-      e.preventDefault();
-      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
-      const newName=newTeacherName.value.trim();const file=newTeacherImg.files[0];
-      if(newName) u.username=newName;
-      if(file){const reader=new FileReader();reader.onload=()=>{u.img=reader.result;saveUsers(users);currentUser=u;renderProfile();alert("Profil güncellendi!");};reader.readAsDataURL(file);}
-      else{saveUsers(users);currentUser=u;renderProfile();alert("Profil güncellendi!");}
-      e.target.reset();
-    };
-    function deleteProfileImg(){let users=getUsers();let u=users.find(x=>x.username===currentUser.username);u.img=null;saveUsers(users);currentUser=u;renderProfile();}
-    window.deleteProfileImg=deleteProfileImg;
-    function updateTeacherSidebar(){teacherSidebarProfile.innerHTML=`${currentUser.img?`<img src="${currentUser.img}" width="30" style="border-radius:50%;vertical-align:middle;margin-right:5px;">`:"👩‍🏫"} ${currentUser.username}`;}
-    document.getElementById("teacherPassForm").onsubmit=e=>{
-      e.preventDefault();
-      let oldPass=oldTeacherPass.value,newPass=newTeacherPass.value,confirm=confirmTeacherPass.value;
-      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
-      if(u.password!==oldPass){alert("Mevcut şifre hatalı!");return;}
-      if(newPass!==confirm){alert("Yeni şifreler eşleşmiyor!");return;}
-      if(!validatePassword(newPass)){alert("Şifre en az 6 karakter olmalı ve hem harf hem rakam içermeli!");return;}
-      u.password=newPass;saveUsers(users);currentUser=u;alert("Şifre başarıyla güncellendi!");e.target.reset();
-    };
-    function showSection(id){document.querySelectorAll("#teacherPanel .content-section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");}
+                    // Başlık güncelleme
+                    document.getElementById('app-title').textContent = config.app_title || defaultConfig.app_title;
+                    document.getElementById('app-title').style.fontFamily = `${customFont}, ${baseFontStack}`;
+                    document.getElementById('app-title').style.fontSize = `${baseSize * 2}px`;
 
-    // === STUDENT PANEL ===
-    function renderStudent(){renderStudentTasks();renderStudentGames();renderStudentProfile();}
-    function renderStudentTasks(){
-      const tasks=getTasks().filter(t=>getUsers().find(u=>u.username===currentUser.username).teacherCode===t.teacherCode||true);
-      studentTasks.innerHTML="";
-      tasks.forEach(t=>{
-        const status=currentUser.statuses[t.title]||"notdone";
-        studentTasks.innerHTML+=`<div class="task"><b>${t.title}</b> (Son: ${t.deadline})
-          <button class="done" onclick="markTask('${t.title}','done')">Tamamladım</button>
-          <button class="notdone" onclick="markTask('${t.title}','notdone')">Tamamlamadım</button>
-          <span>Durum: ${status==="done"?"✅":"❌"}</span></div>`;
-      });
-    }
-    function markTask(title,status){
-      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
-      u.statuses[u.statuses?title:title]=status;u.statuses[title]=status;saveUsers(users);currentUser=u;renderStudentTasks();
-    }
-    window.markTask=markTask;
-    function renderStudentGames(){
-      studentGames.innerHTML="";
-      const games=getGames();games.forEach(g=>{
-        studentGames.innerHTML+=`<div class="game-card"><img src="${g.img}"><p>${g.title}</p>
-          <a href="${g.link}" target="_blank">Oyna</a></div>`;
-      });
-    }
-    function renderStudentProfile(){
-      const img=currentUser.img?`<img src="${currentUser.img}" width="100" style="border-radius:50%"><br/>`:"<p>Profil resmi yok</p>";
-      studentProfileView.innerHTML=`${img}<p><b>Kullanıcı Adı:</b> ${currentUser.username}</p>`;
-      updateStudentSidebar();
-    }
-    document.getElementById("studentProfileForm").onsubmit=e=>{
-      e.preventDefault();
-      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
-      const newName=newStudentName.value.trim();const file=newStudentImg.files[0];
-      if(newName) u.username=newName;
-      if(file){const reader=new FileReader();reader.onload=()=>{u.img=reader.result;saveUsers(users);currentUser=u;renderStudentProfile();alert("Profil güncellendi!");};reader.readAsDataURL(file);}
-      else{saveUsers(users);currentUser=u;renderStudentProfile();alert("Profil güncellendi!");}
-      e.target.reset();
-    };
-    function deleteStudentImg(){let users=getUsers();let u=users.find(x=>x.username===currentUser.username);u.img=null;saveUsers(users);currentUser=u;renderStudentProfile();}
-    window.deleteStudentImg=deleteStudentImg;
-    function updateStudentSidebar(){studentSidebarProfile.innerHTML=`${currentUser.img?`<img src="${currentUser.img}" width="30" style="border-radius:50%;vertical-align:middle;margin-right:5px;">`:"👨‍🎓"} ${currentUser.username}`;}
-    document.getElementById("studentPassForm").onsubmit=e=>{
-      e.preventDefault();
-      let oldPass=oldStudentPass.value,newPass=newStudentPass.value,confirm=confirmStudentPass.value;
-      let users=getUsers();let u=users.find(x=>x.username===currentUser.username);
-      if(u.password!==oldPass){alert("Mevcut şifre hatalı!");return;}
-      if(newPass!==confirm){alert("Yeni şifreler eşleşmiyor!");return;}
-      if(!validatePassword(newPass)){alert("Şifre en az 6 karakter olmalı ve hem harf hem rakam içermeli!");return;}
-      u.password=newPass;saveUsers(users);currentUser=u;alert("Şifre başarıyla güncellendi!");e.target.reset();
-    };
-    function showSectionStudent(id){document.querySelectorAll("#studentPanel .content-section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");}
-  </script>
-</body>
+                    // Buton metinleri güncelleme
+                    document.getElementById('check-btn').textContent = config.check_button_text || defaultConfig.check_button_text;
+                    document.getElementById('new-problem-btn').textContent = config.new_problem_text || defaultConfig.new_problem_text;
+
+                    // Renkler güncelleme
+                    document.body.style.background = `linear-gradient(to bottom right, ${config.background_color || defaultConfig.background_color}, ${config.primary_color || defaultConfig.primary_color}20)`;
+                    
+                    // Buton renklerini güncelle
+                    const checkBtn = document.getElementById('check-btn');
+                    const newProblemBtn = document.getElementById('new-problem-btn');
+                    
+                    checkBtn.style.backgroundColor = config.secondary_color || defaultConfig.secondary_color;
+                    newProblemBtn.style.backgroundColor = config.primary_color || defaultConfig.primary_color;
+
+                    // Font ayarları
+                    document.body.style.fontFamily = `${customFont}, ${baseFontStack}`;
+                    document.body.style.fontSize = `${baseSize}px`;
+                    document.body.style.color = config.text_color || defaultConfig.text_color;
+                },
+                mapToCapabilities: (config) => ({
+                    recolorables: [
+                        {
+                            get: () => config.background_color || defaultConfig.background_color,
+                            set: (value) => {
+                                if (window.elementSdk) {
+                                    window.elementSdk.setConfig({ background_color: value });
+                                }
+                            }
+                        },
+                        {
+                            get: () => config.primary_color || defaultConfig.primary_color,
+                            set: (value) => {
+                                if (window.elementSdk) {
+                                    window.elementSdk.setConfig({ primary_color: value });
+                                }
+                            }
+                        },
+                        {
+                            get: () => config.secondary_color || defaultConfig.secondary_color,
+                            set: (value) => {
+                                if (window.elementSdk) {
+                                    window.elementSdk.setConfig({ secondary_color: value });
+                                }
+                            }
+                        },
+                        {
+                            get: () => config.text_color || defaultConfig.text_color,
+                            set: (value) => {
+                                if (window.elementSdk) {
+                                    window.elementSdk.setConfig({ text_color: value });
+                                }
+                            }
+                        },
+                        {
+                            get: () => config.accent_color || defaultConfig.accent_color,
+                            set: (value) => {
+                                if (window.elementSdk) {
+                                    window.elementSdk.setConfig({ accent_color: value });
+                                }
+                            }
+                        }
+                    ],
+                    borderables: [],
+                    fontEditable: {
+                        get: () => config.font_family || defaultConfig.font_family,
+                        set: (value) => {
+                            if (window.elementSdk) {
+                                window.elementSdk.setConfig({ font_family: value });
+                            }
+                        }
+                    },
+                    fontSizeable: {
+                        get: () => config.font_size || defaultConfig.font_size,
+                        set: (value) => {
+                            if (window.elementSdk) {
+                                window.elementSdk.setConfig({ font_size: value });
+                            }
+                        }
+                    }
+                }),
+                mapToEditPanelValues: (config) => new Map([
+                    ["app_title", config.app_title || defaultConfig.app_title],
+                    ["check_button_text", config.check_button_text || defaultConfig.check_button_text],
+                    ["new_problem_text", config.new_problem_text || defaultConfig.new_problem_text]
+                ])
+            });
+        }
+
+        // Basamak sayısına göre rastgele sayı üretme
+        function generateNumberByDigits(digits) {
+            if (digits === 1) {
+                return Math.floor(Math.random() * 9) + 1; // 1-9
+            } else if (digits === 2) {
+                return Math.floor(Math.random() * 90) + 10; // 10-99
+            } else if (digits === 3) {
+                return Math.floor(Math.random() * 900) + 100; // 100-999
+            }
+            return 100; // varsayılan
+        }
+
+        // Tek problem oluşturma
+        function generateSingleProblem() {
+            let num1, num2, result;
+            let maxAttempts = 100;
+            let attempts = 0;
+            
+            if (currentProblemType.startsWith('addition')) {
+                // Toplama işlemi
+                do {
+                    num1 = generateNumberByDigits(currentDigitCount);
+                    num2 = generateNumberByDigits(currentDigitCount);
+                    result = num1 + num2;
+                    attempts++;
+                    
+                    // Sonucun makul bir aralıkta olmasını sağla
+                    let maxResult = currentDigitCount === 1 ? 18 : 
+                                   currentDigitCount === 2 ? 198 : 1998;
+                } while ((result > maxResult || result < 2) && attempts < maxAttempts);
+                
+                return { num1, num2, result, operation: 'addition' };
+            } else {
+                // Çıkarma işlemi
+                do {
+                    num1 = generateNumberByDigits(currentDigitCount);
+                    num2 = generateNumberByDigits(currentDigitCount);
+                    
+                    // num1'in num2'den büyük olmasını sağla
+                    if (num1 < num2) {
+                        [num1, num2] = [num2, num1];
+                    }
+                    
+                    result = num1 - num2;
+                    attempts++;
+                } while (result < 0 && attempts < maxAttempts);
+                
+                return { num1, num2, result, operation: 'subtraction' };
+            }
+        }
+
+        // Çoklu problem oluşturma
+        function generateProblems() {
+            currentProblems = [];
+            for (let i = 0; i < currentProblemCount; i++) {
+                currentProblems.push(generateSingleProblem());
+            }
+            displayProblems();
+        }
+
+        // Tek problem görüntüleme
+        function displaySingleProblem(problem, index) {
+            const operationSign = problem.operation === 'addition' ? '+' : '−';
+            const operationClass = problem.operation === 'addition' ? 'plus-sign' : 'minus-sign';
+            
+            // A4 çalışma sayfası için boyut ayarları
+            const isCompactMode = currentProblemCount > 6;
+            const cardPadding = isCompactMode ? 'p-2' : 'p-4';
+            const minHeight = isCompactMode ? 'min-h-[120px]' : 'min-h-[180px]';
+            const fontSize = isCompactMode ? Math.max(12, currentFontSize - 6) : currentFontSize;
+            const inputWidth = isCompactMode ? '60px' : '80px';
+            const inputHeight = isCompactMode ? '35px' : '50px';
+            const minWidth = isCompactMode ? '80px' : '120px';
+            const questionFontSize = isCompactMode ? 'text-xs' : 'text-sm';
+            
+            let html = '';
+            
+            if (currentLayout === 'vertical') {
+                if (currentProblemType.endsWith('-result')) {
+                    // Sonucu bul
+                    html = `
+                        <div class="problem-card bg-white rounded border ${cardPadding} ${minHeight} flex flex-col justify-center items-center" style="font-size: ${fontSize}px; font-weight: bold; font-family: 'Courier New', monospace;">
+                            <div class="${questionFontSize} text-gray-500 mb-1 self-start">Soru ${index + 1}</div>
+                            <div class="flex flex-col items-center justify-center flex-1">
+                                <div style="text-align: center; margin-bottom: 6px; min-width: ${minWidth};">${problem.num1}</div>
+                                <div style="display: flex; align-items: center; margin-bottom: 6px; min-width: ${minWidth}; position: relative;">
+                                    <span style="text-align: center; width: 100%;">${problem.num2}</span>
+                                </div>
+                                <div style="position: relative; width: ${minWidth};">
+                                    <span class="${operationClass}" style="font-size: ${fontSize + 4}px; position: absolute; left: 0; top: -${Math.floor(fontSize * 1.2)}px;">${operationSign}</span>
+                                    <div class="line-under" style="width: 100%; margin: 0; height: 2px;"></div>
+                                </div>
+                                <div style="text-align: center; margin-top: 6px; min-width: ${minWidth};">
+                                    <input type="number" class="math-input" id="answer-input-${index}" placeholder="?" style="font-size: ${fontSize}px; width: ${inputWidth}; height: ${inputHeight}; text-align: center; border: 1px solid #e5e7eb; border-radius: 4px;">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (currentProblemType === 'addition-first-addend' || currentProblemType === 'subtraction-minuend') {
+                    // 1. toplanı bul veya eksileni bul
+                    html = `
+                        <div class="problem-card bg-white rounded border ${cardPadding} ${minHeight} flex flex-col justify-center items-center" style="font-size: ${fontSize}px; font-weight: bold; font-family: 'Courier New', monospace;">
+                            <div class="${questionFontSize} text-gray-500 mb-1 self-start">Soru ${index + 1}</div>
+                            <div class="flex flex-col items-center justify-center flex-1">
+                                <div style="text-align: center; margin-bottom: 6px; min-width: ${minWidth};">
+                                    <input type="number" class="math-input" id="answer-input-${index}" placeholder="?" style="font-size: ${fontSize}px; width: ${inputWidth}; height: ${inputHeight}; text-align: center; border: 1px solid #e5e7eb; border-radius: 4px;">
+                                </div>
+                                <div style="display: flex; align-items: center; margin-bottom: 6px; min-width: ${minWidth}; position: relative;">
+                                    <span style="text-align: center; width: 100%;">${problem.num2}</span>
+                                </div>
+                                <div style="position: relative; width: ${minWidth};">
+                                    <span class="${operationClass}" style="font-size: ${fontSize + 4}px; position: absolute; left: 0; top: -${Math.floor(fontSize * 1.2)}px;">${operationSign}</span>
+                                    <div class="line-under" style="width: 100%; margin: 0; height: 2px;"></div>
+                                </div>
+                                <div style="text-align: center; margin-top: 6px; min-width: ${minWidth};">${problem.result}</div>
+                            </div>
+                        </div>
+                    `;
+                } else if (currentProblemType === 'addition-second-addend' || currentProblemType === 'subtraction-subtrahend') {
+                    // 2. toplanı bul veya çıkanı bul
+                    html = `
+                        <div class="problem-card bg-white rounded border ${cardPadding} ${minHeight} flex flex-col justify-center items-center" style="font-size: ${fontSize}px; font-weight: bold; font-family: 'Courier New', monospace;">
+                            <div class="${questionFontSize} text-gray-500 mb-1 self-start">Soru ${index + 1}</div>
+                            <div class="flex flex-col items-center justify-center flex-1">
+                                <div style="text-align: center; margin-bottom: 6px; min-width: ${minWidth};">${problem.num1}</div>
+                                <div style="display: flex; align-items: center; margin-bottom: 6px; min-width: ${minWidth}; position: relative;">
+                                    <div style="text-align: center; width: 100%;">
+                                        <input type="number" class="math-input" id="answer-input-${index}" placeholder="?" style="font-size: ${fontSize}px; width: ${inputWidth}; height: ${inputHeight}; text-align: center; border: 1px solid #e5e7eb; border-radius: 4px;">
+                                    </div>
+                                </div>
+                                <div style="position: relative; width: ${minWidth};">
+                                    <span class="${operationClass}" style="font-size: ${fontSize + 4}px; position: absolute; left: 0; top: -${Math.floor(fontSize * 1.2)}px;">${operationSign}</span>
+                                    <div class="line-under" style="width: 100%; margin: 0; height: 2px;"></div>
+                                </div>
+                                <div style="text-align: center; margin-top: 6px; min-width: ${minWidth};">${problem.result}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // Yatay düzen için optimized boyutlar
+                const horizontalHeight = isCompactMode ? 'h-[70px]' : 'h-[100px]';
+                const gap = isCompactMode ? '6px' : '12px';
+                const cardWidth = isCompactMode ? 'w-[240px]' : 'w-[320px]';
+                
+                if (currentProblemType.endsWith('-result')) {
+                    // Sonucu bul - yatay düzen
+                    html = `
+                        <div class="problem-card bg-white rounded border ${cardPadding} ${horizontalHeight} ${cardWidth} flex flex-col justify-center mx-auto">
+                            <div class="${questionFontSize} text-gray-500 mb-1 text-center">Soru ${index + 1}</div>
+                            <div class="flex-1 flex items-center justify-center">
+                                <div style="font-size: ${fontSize}px; font-weight: bold; display: flex; align-items: center; gap: ${gap}; flex-wrap: nowrap; justify-content: center;">
+                                    <span style="min-width: ${isCompactMode ? '40px' : '50px'}; text-align: center;">${problem.num1}</span>
+                                    <span class="${operationClass}" style="font-size: ${fontSize + 2}px; min-width: ${isCompactMode ? '20px' : '25px'}; text-align: center;">${operationSign}</span>
+                                    <span style="min-width: ${isCompactMode ? '40px' : '50px'}; text-align: center;">${problem.num2}</span>
+                                    <span class="equals-sign" style="font-size: ${fontSize + 2}px; min-width: ${isCompactMode ? '20px' : '25px'}; text-align: center;">=</span>
+                                    <input type="number" class="math-input" id="answer-input-${index}" placeholder="?" style="font-size: ${fontSize}px; width: ${inputWidth}; height: ${inputHeight}; border: 1px solid #e5e7eb; border-radius: 4px;">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (currentProblemType === 'addition-first-addend' || currentProblemType === 'subtraction-minuend') {
+                    // 1. toplanı bul veya eksileni bul
+                    html = `
+                        <div class="problem-card bg-white rounded border ${cardPadding} ${horizontalHeight} ${cardWidth} flex flex-col justify-center mx-auto">
+                            <div class="${questionFontSize} text-gray-500 mb-1 text-center">Soru ${index + 1}</div>
+                            <div class="flex-1 flex items-center justify-center">
+                                <div style="font-size: ${fontSize}px; font-weight: bold; display: flex; align-items: center; gap: ${gap}; flex-wrap: nowrap; justify-content: center;">
+                                    <input type="number" class="math-input" id="answer-input-${index}" placeholder="?" style="font-size: ${fontSize}px; width: ${inputWidth}; height: ${inputHeight}; border: 1px solid #e5e7eb; border-radius: 4px;">
+                                    <span class="${operationClass}" style="font-size: ${fontSize + 2}px; min-width: ${isCompactMode ? '20px' : '25px'}; text-align: center;">${operationSign}</span>
+                                    <span style="min-width: ${isCompactMode ? '40px' : '50px'}; text-align: center;">${problem.num2}</span>
+                                    <span class="equals-sign" style="font-size: ${fontSize + 2}px; min-width: ${isCompactMode ? '20px' : '25px'}; text-align: center;">=</span>
+                                    <span style="min-width: ${isCompactMode ? '40px' : '50px'}; text-align: center;">${problem.result}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 2. toplanı bul veya çıkanı bul
+                    html = `
+                        <div class="problem-card bg-white rounded border ${cardPadding} ${horizontalHeight} ${cardWidth} flex flex-col justify-center mx-auto">
+                            <div class="${questionFontSize} text-gray-500 mb-1 text-center">Soru ${index + 1}</div>
+                            <div class="flex-1 flex items-center justify-center">
+                                <div style="font-size: ${fontSize}px; font-weight: bold; display: flex; align-items: center; gap: ${gap}; flex-wrap: nowrap; justify-content: center;">
+                                    <span style="min-width: ${isCompactMode ? '40px' : '50px'}; text-align: center;">${problem.num1}</span>
+                                    <span class="${operationClass}" style="font-size: ${fontSize + 2}px; min-width: ${isCompactMode ? '20px' : '25px'}; text-align: center;">${operationSign}</span>
+                                    <input type="number" class="math-input" id="answer-input-${index}" placeholder="?" style="font-size: ${fontSize}px; width: ${inputWidth}; height: ${inputHeight}; border: 1px solid #e5e7eb; border-radius: 4px;">
+                                    <span class="equals-sign" style="font-size: ${fontSize + 2}px; min-width: ${isCompactMode ? '20px' : '25px'}; text-align: center;">=</span>
+                                    <span style="min-width: ${isCompactMode ? '40px' : '50px'}; text-align: center;">${problem.result}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            return html;
+        }
+
+        // Çoklu problem görüntüleme
+        function displayProblems() {
+            const container = document.getElementById('problem-container');
+            
+            // A4 çalışma sayfası düzeni için grid ayarları
+            let gridClass = '';
+            if (currentProblemCount <= 2) {
+                gridClass = 'grid-cols-1 md:grid-cols-2';
+            } else if (currentProblemCount <= 6) {
+                gridClass = 'grid-cols-2 md:grid-cols-3';
+            } else if (currentProblemCount <= 12) {
+                gridClass = 'grid-cols-3 md:grid-cols-4';
+            } else if (currentProblemCount <= 20) {
+                gridClass = 'grid-cols-4 md:grid-cols-5';
+            } else if (currentProblemCount <= 30) {
+                gridClass = 'grid-cols-5 md:grid-cols-6';
+            } else {
+                gridClass = 'grid-cols-6 md:grid-cols-8';
+            }
+            container.className = `problem-grid grid gap-4 ${gridClass}`;
+            
+            let html = '';
+            for (let i = 0; i < currentProblems.length; i++) {
+                html += `<div class="problem-card-wrapper">${displaySingleProblem(currentProblems[i], i)}</div>`;
+            }
+            
+            container.innerHTML = html;
+            
+            // Enter tuşu ile kontrol etme
+            for (let i = 0; i < currentProblems.length; i++) {
+                const answerInput = document.getElementById(`answer-input-${i}`);
+                if (answerInput) {
+                    answerInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            checkAnswers();
+                        }
+                    });
+                }
+            }
+            
+            // İlk input'a odaklan
+            const firstInput = document.getElementById('answer-input-0');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }
+
+        // Çoklu cevap kontrol etme
+        function checkAnswers() {
+            let correctCount = 0;
+            let totalCount = currentProblems.length;
+            let allAnswered = true;
+            
+            for (let i = 0; i < currentProblems.length; i++) {
+                const answerInput = document.getElementById(`answer-input-${i}`);
+                const problem = currentProblems[i];
+                
+                if (!answerInput || !answerInput.value) {
+                    allAnswered = false;
+                    continue;
+                }
+                
+                const userAnswer = parseInt(answerInput.value);
+                let correctAnswer;
+                
+                if (currentProblemType.endsWith('-result')) {
+                    // Sonucu bul
+                    correctAnswer = problem.result;
+                } else if (currentProblemType === 'addition-first-addend' || currentProblemType === 'subtraction-minuend') {
+                    // 1. toplanı bul veya eksileni bul
+                    correctAnswer = problem.num1;
+                } else {
+                    // 2. toplanı bul veya çıkanı bul
+                    correctAnswer = problem.num2;
+                }
+                
+                if (userAnswer === correctAnswer) {
+                    answerInput.classList.remove('incorrect');
+                    answerInput.classList.add('correct');
+                    correctCount++;
+                } else {
+                    answerInput.classList.remove('correct');
+                    answerInput.classList.add('incorrect');
+                }
+            }
+            
+            if (!allAnswered) {
+                showMessage('Lütfen tüm soruları cevaplayın!', 'warning');
+                return;
+            }
+            
+            if (correctCount === totalCount) {
+                showMessage(`🎉 Mükemmel! ${correctCount}/${totalCount} doğru cevap!`, 'success');
+            } else if (correctCount > totalCount / 2) {
+                showMessage(`👍 İyi! ${correctCount}/${totalCount} doğru cevap!`, 'success');
+            } else {
+                showMessage(`📚 Tekrar deneyin! ${correctCount}/${totalCount} doğru cevap!`, 'error');
+            }
+        }
+
+        // Mesaj gösterme
+        function showMessage(message, type) {
+            const resultMessage = document.getElementById('result-message');
+            resultMessage.textContent = message;
+            resultMessage.className = `mt-6 text-center text-lg font-semibold ${
+                type === 'success' ? 'text-green-600' : 
+                type === 'error' ? 'text-red-600' : 'text-yellow-600'
+            }`;
+            resultMessage.classList.remove('hidden');
+            
+            setTimeout(() => {
+                resultMessage.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Event listeners
+        document.getElementById('problem-type').addEventListener('change', function(e) {
+            currentProblemType = e.target.value;
+            generateProblems();
+        });
+
+        document.getElementById('problem-count').addEventListener('change', function(e) {
+            currentProblemCount = parseInt(e.target.value);
+            generateProblems();
+        });
+
+        document.getElementById('digit-count').addEventListener('change', function(e) {
+            currentDigitCount = parseInt(e.target.value);
+            generateProblems();
+        });
+
+        document.getElementById('layout-type').addEventListener('change', function(e) {
+            currentLayout = e.target.value;
+            displayProblems();
+        });
+
+        document.getElementById('font-size').addEventListener('change', function(e) {
+            currentFontSize = parseInt(e.target.value);
+            displayProblems();
+        });
+
+        document.getElementById('check-btn').addEventListener('click', checkAnswers);
+        document.getElementById('new-problem-btn').addEventListener('click', generateProblems);
+
+        // Sayfa yüklendiğinde ilk problemleri oluştur
+        generateProblems();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99f7b28bd395de7a',t:'MTc2MzMwMzU0My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
